@@ -6,6 +6,7 @@ import {FormsModule} from '@angular/forms';
 import {NgIf} from '@angular/common';
 import {Jimp, JimpMime} from 'jimp';
 import Quagga from '@ericblade/quagga2';
+import {UpcService} from './services/upc.service';
 
 interface UpcResult {
   manufacturer: string;
@@ -32,7 +33,7 @@ export class AppComponent {
   errorMessage = '';
   scanResult: UpcResult | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private upcService:UpcService) {}
 
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0];
@@ -60,9 +61,9 @@ export class AppComponent {
       try {
         const upcCode = await this.scanBarcode(preProcessedImageFile) ?? "";
 
-        const imgElement = document.createElement('img');
-        imgElement.src = imageUrl;
-        document.body.appendChild(imgElement);
+        // const imgElement = document.createElement('img');
+        // imgElement.src = imageUrl;
+        // document.body.appendChild(imgElement);
         const upcMatch = upcCode.match(/\d{12}/);
 
         if (upcMatch) {
@@ -86,28 +87,11 @@ export class AppComponent {
   }
 
   lookupUpc(): void {
-    // if (!this.upcInput || this.upcInput.length !== 12) {
-    //   this.errorMessage = 'Please enter a valid 12-digit UPC';
-    //   return;
-    // }
-    //
-    // this.isLoading = true;
-    // this.errorMessage = '';
-    //
-    // // In a real app, replace with actual API endpoint
-    // this.http.get<UpcResult>(`https://api.example.com/upc/${this.upcInput}`)
-    //   .subscribe({
-    //     next: (result) => {
-    //       this.scanResult = result;
-    //     },
-    //     error: (error) => {
-    //       this.errorMessage = 'Error looking up UPC';
-    //       console.error(error);
-    //     },
-    //     complete: () => {
-    //       this.isLoading = false;
-    //     }
-    //   });
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.upcService.getUpcInfo(this.upcInput).subscribe(upcResult => {this.scanResult = upcResult;})
   }
 
   // need to preprocess for best results
@@ -160,11 +144,11 @@ export class AppComponent {
   }
 
   getCountryEmoji(countryCode: string): string {
-    // Convert country code to emoji flag
-    return countryCode
+    // convert country code to emoji flag
+    return String.fromCodePoint(...countryCode
       .toUpperCase()
-      .replace(/./g, char =>
-        String.fromCodePoint(char.charCodeAt(0) + 127397)
-      );
+      .split("")
+      // flag emoji a - unicode a (65)
+      .map(char => 127397 + char.charCodeAt(0)))
   }
 }
