@@ -33,3 +33,7 @@
   width: 75%;
   animation: alert-appear 1s cubic-bezier(0.645, 0.045, 0.355, 1) ;
 }
+
+section h2 {
+  border-bottom: 0.2rem solid var(--bs-primary);
+}

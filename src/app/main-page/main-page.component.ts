@@ -1,11 +1,11 @@
 import {Component, ElementRef, ViewChild} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {UpcService} from '../services/upc.service';
-import {ActivatedRoute, Router, RouterOutlet} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {Jimp, JimpMime} from 'jimp';
 import Quagga from '@ericblade/quagga2';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {NgClass, NgIf} from '@angular/common';
+import { NgIf} from '@angular/common';
 import {UpcItem} from '../models/upc-item';
 import {UpcNotFoundError} from '../models/errors/UpcNotFoundError';
 import {NgbAlert} from '@ng-bootstrap/ng-bootstrap';
@@ -16,8 +16,6 @@ import {NgbAlert} from '@ng-bootstrap/ng-bootstrap';
   imports: [
     FormsModule,
     NgIf,
-    RouterOutlet,
-    NgClass,
     ReactiveFormsModule,
     NgbAlert
   ],
@@ -79,6 +77,7 @@ export class MainPageComponent {
         }
       } catch (e) {
         this.errorMessage = "No UPC found!";
+        this.isLoading = false;
       }
 
 
@@ -86,8 +85,6 @@ export class MainPageComponent {
     } catch (error) {
       this.errorMessage = 'Error processing image';
       console.error(error);
-    } finally {
-      this.isLoading = false;
     }
   }
 
@@ -95,6 +92,10 @@ export class MainPageComponent {
     if (this.scanForm.valid || this.inputMode == 'image') {
       this.isLoading = true;
       this.errorMessage = '';
+
+      if (this.scanForm.controls['upcInput'].valid) {
+        this.upcInput = this.scanForm.controls['upcInput'].value;
+      }
 
       this.upcService.getUpcInfo(this.upcInput).subscribe({
         next: (upcResult) => {
@@ -138,7 +139,7 @@ export class MainPageComponent {
       return await image.getBuffer(JimpMime.png);
 
     } catch (e) {
-      console.error('Oopsie daisy while preprocessing!:', e);
+      console.error('Oopsie daisy while preprocessing!', e);
       throw e;
     }
 

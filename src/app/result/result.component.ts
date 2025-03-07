@@ -1,12 +1,11 @@
 import {Component, Input} from '@angular/core';
 import {UpcItem} from '../models/upc-item';
-import {Router, RouterLink} from '@angular/router';
+import {Router} from '@angular/router';
 import {NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-result',
   imports: [
-    RouterLink,
     NgIf
   ],
   templateUrl: './result.component.html',

@@ -16,6 +16,12 @@
       </span>
     </div>
 
+    <div class="my-5 fw-bold fs-5 text-center">
+      <p *ngIf="scanResult.hasCanada && !scanResult.hasUSA">✅ CANADIAN PRODUCT 🇨🇦</p>
+      <p *ngIf="scanResult.hasUSA && !scanResult.hasCanada">❌ AMERICAN PRODUCT 🇺🇸</p>
+      <p *ngIf="scanResult.hasUSA && scanResult.hasCanada">❓ BOTH AMERICAN AND CANADIAN PRODUCT</p>
+      <p *ngIf="!scanResult.hasUSA && !scanResult.hasCanada">NOT CANADIAN PRODUCT 🌎</p>
+    </div>
     <div class="mt-4 text-center">
       <button (click)="onScanAgain()" class="btn btn-primary">Scan Again</button>
     </div>

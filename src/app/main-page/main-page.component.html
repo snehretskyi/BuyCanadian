@@ -1,7 +1,6 @@
 <main class="mt-5 d-flex flex-column w-75 h-100 m-auto align-items-center justify-content-center">
-
-
-  <form class="d-block" [formGroup]="scanForm" *ngIf="!isLoading">
+  <div *ngIf="!isLoading" class="d-flex flex-column w-75 h-100 m-auto align-items-center justify-content-center">
+  <form class="d-block" [formGroup]="scanForm">
     <div class="input-section" *ngIf="inputMode === 'text'">
       <label for="upc-input" class="form-label d-block ms-2">Enter UPC Code:</label>
       <div class="d-flex btn-group">
@@ -42,7 +41,7 @@
     </div>
   </form>
 
-  <div class="mt-5" *ngIf="!isLoading">
+  <div class="my-5">
     <div class="btn-group" role="group">
       <button
         type="button"
@@ -65,7 +64,19 @@
     </div>
   </div>
 
+  <section class="mt-5">
+    <h2 class="text-center p-2">About</h2>
+    <p>Simply make a photo of a product's barcode (with numbers underneath visible), or enter the UPC number manually.
+      The app will search the database and notify whether is the product Canadian, American, or from another country.</p>
+  </section>
 
+  <section class="mt-5">
+    <h2 class="text-center p-2">Disclaimer</h2>
+    <p>The app uses Open Food Facts API to get information about the product. I do not guarantee the accuracy of the data.
+      Use the app as a quick guide, not as the definitive source of information. The app is provided as-is.</p>
+  </section>
+
+  </div>
   <div class="status" *ngIf="isLoading">
     <span class="loader"></span>
   </div>
@@ -73,5 +84,6 @@
   <ngb-alert [type]="'danger'" (closed)="this.errorMessage = ''" [animation]="true"  class="error" *ngIf="errorMessage">
     {{ errorMessage }}
   </ngb-alert>
+
 </main>
 
