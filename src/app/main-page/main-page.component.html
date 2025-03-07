@@ -1,26 +1,26 @@
 <main class="mt-5 d-flex flex-column w-75 h-100 m-auto align-items-center justify-content-center">
 
 
-  <div class="input-container">
+  <form class="d-block" [formGroup]="scanForm" *ngIf="!isLoading">
     <div class="input-section" *ngIf="inputMode === 'text'">
       <label for="upc-input" class="form-label d-block ms-2">Enter UPC Code:</label>
-      <div class="d-flex">
+      <div class="d-flex btn-group">
         <input
           id="upc-input"
           class="form-control"
           type="text"
-          [(ngModel)]="upcInput"
+          formControlName="upcInput"
           placeholder="Enter 12-digit UPC code"
           maxlength="12"
           pattern="\d{12}"
         >
-        <button (click)="lookupUpc()" [disabled]="isLoading" class="btn btn-primary"><i class="bi bi-search"></i></button>
+        <button (click)="lookupUpc()" [disabled]="isLoading || scanForm.invalid" class="btn btn-primary"><i class="bi bi-search"></i></button>
       </div>
     </div>
 
     <div class="input-section" *ngIf="inputMode === 'image'">
-      <label for="file-input" class="form-label d-block ms-2">Scan Barcode</label>
-      <div class="d-flex">
+      <label for="file-input" class="form-label d-block ms-2">Scan Barcode:</label>
+      <div class="d-flex btn-group">
         <input
           id="file-input"
           class="form-control"
@@ -40,9 +40,9 @@
         </button>
       </div>
     </div>
-  </div>
+  </form>
 
-  <div class="mt-5">
+  <div class="mt-5" *ngIf="!isLoading">
     <div class="btn-group" role="group">
       <button
         type="button"
@@ -67,12 +67,11 @@
 
 
   <div class="status" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Processing...</p>
+    <span class="loader"></span>
   </div>
 
-  <div class="error" *ngIf="errorMessage">
-    <p>{{ errorMessage }}</p>
-  </div>
+  <ngb-alert [type]="'danger'" (closed)="this.errorMessage = ''" [animation]="true"  class="error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </ngb-alert>
 </main>
 

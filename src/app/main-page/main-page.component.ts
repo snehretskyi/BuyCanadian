@@ -4,9 +4,11 @@ import {UpcService} from '../services/upc.service';
 import {ActivatedRoute, Router, RouterOutlet} from '@angular/router';
 import {Jimp, JimpMime} from 'jimp';
 import Quagga from '@ericblade/quagga2';
-import {FormsModule} from '@angular/forms';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {NgClass, NgIf} from '@angular/common';
 import {UpcItem} from '../models/upc-item';
+import {UpcNotFoundError} from '../models/errors/UpcNotFoundError';
+import {NgbAlert} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-main-page',
@@ -15,12 +17,15 @@ import {UpcItem} from '../models/upc-item';
     FormsModule,
     NgIf,
     RouterOutlet,
-    NgClass
+    NgClass,
+    ReactiveFormsModule,
+    NgbAlert
   ],
   templateUrl: './main-page.component.html',
   styleUrl: './main-page.component.css'
 })
 export class MainPageComponent {
+  scanForm:FormGroup;
   upcInput = '';
   selectedFile: File | null = null;
   isLoading = false;
@@ -28,7 +33,11 @@ export class MainPageComponent {
   inputMode: 'text' | 'image' = 'image';
   scanResult: UpcItem | null = null;
 
-  constructor(private http: HttpClient, private upcService:UpcService, private Route: ActivatedRoute, private router: Router) { }
+  constructor(private http: HttpClient, private upcService:UpcService, private Route: ActivatedRoute, private router: Router, private fb:FormBuilder) {
+    this.scanForm = this.fb.group({
+      upcInput: ['', [Validators.required, Validators.pattern(/^\d{12}$/), Validators.maxLength(12)]]
+    });
+  }
 
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0];
@@ -83,26 +92,35 @@ export class MainPageComponent {
   }
 
   lookupUpc(): void {
+    if (this.scanForm.valid || this.inputMode == 'image') {
+      this.isLoading = true;
+      this.errorMessage = '';
 
-    this.isLoading = true;
-    this.errorMessage = '';
+      this.upcService.getUpcInfo(this.upcInput).subscribe({
+        next: (upcResult) => {
+          // always wanted to try local storage :)
+          localStorage.setItem('scanResult', JSON.stringify(upcResult));
+          localStorage.setItem('upcCode', this.upcInput);
 
-    this.upcService.getUpcInfo(this.upcInput).subscribe({
-      next: (upcResult) => {
-        // always wanted to try local storage :)
-        localStorage.setItem('scanResult', JSON.stringify(upcResult));
-        localStorage.setItem('upcCode', this.upcInput);
+          // navigate to result page
+          this.router.navigate(['/result']);
+          this.isLoading = false;
+        },
+        error: (e) => {
+          if (e instanceof UpcNotFoundError) {
+            this.errorMessage = e.message;
+          } else  {
+            this.errorMessage = 'Error looking up UPC';
+          }
 
-        // navigate to result page
-        this.router.navigate(['/result']);
-        this.isLoading = false;
-      },
-      error: (e) => {
-        this.errorMessage = 'Error looking up UPC';
-        this.isLoading = false;
-        console.error(e);
-      }
-    });
+          this.isLoading = false;
+          console.error(e);
+        }
+      });
+    } else {
+      this.errorMessage = "UPC must be a sequence of 12 numbers"
+    }
+
   }
 
   // need to preprocess for best results
@@ -131,16 +149,16 @@ export class MainPageComponent {
       Quagga.decodeSingle(
         {
           src: URL.createObjectURL(imageFile),
-          numOfWorkers: 0, // Use 0 for auto-detection
+          numOfWorkers: 0,
           inputStream: {
-            size: 800, // Adjust based on image size
+            size: 800,
           },
           decoder: {
-            readers: ['upc_reader'], // Specify UPC reader
+            readers: ['upc_reader'],
           },
           locator: {
             halfSample: true,
-            patchSize: 'medium', // Adjust for better detection
+            patchSize: 'medium',
           },
         },
         (result) => {
@@ -157,4 +175,7 @@ export class MainPageComponent {
   openCamera() {
     document.getElementById('file-input')!.click()
   }
+
+  protected readonly alert = alert;
+  protected readonly close = close;
 }
