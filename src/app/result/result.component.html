@@ -1,0 +1,23 @@
+<div class="mt-5 d-flex flex-column align-items-center">
+  <div class="result" *ngIf="scanResult">
+    <h2>Product Information</h2>
+    <div class="result-item">
+      <span class="label">UPC:</span>
+      <span class="value">{{ upcCode }}</span>
+    </div>
+    <div class="result-item">
+      <span class="label">Manufacturer:</span>
+      <span class="value">{{ scanResult.manufacturer }}</span>
+    </div>
+    <div class="result-item">
+      <span class="label">Country of Origin:</span>
+      <span class="value">
+        {{ getCountryEmoji(scanResult.countryCode) }} {{ scanResult.country }}
+      </span>
+    </div>
+
+    <div class="mt-4 text-center">
+      <button (click)="onScanAgain()" class="btn btn-primary">Scan Again</button>
+    </div>
+  </div>
+</div>

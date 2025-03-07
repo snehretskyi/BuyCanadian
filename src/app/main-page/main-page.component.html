@@ -1,0 +1,78 @@
+<main class="mt-5 d-flex flex-column w-75 h-100 m-auto align-items-center justify-content-center">
+
+
+  <div class="input-container">
+    <div class="input-section" *ngIf="inputMode === 'text'">
+      <label for="upc-input" class="form-label d-block ms-2">Enter UPC Code:</label>
+      <div class="d-flex">
+        <input
+          id="upc-input"
+          class="form-control"
+          type="text"
+          [(ngModel)]="upcInput"
+          placeholder="Enter 12-digit UPC code"
+          maxlength="12"
+          pattern="\d{12}"
+        >
+        <button (click)="lookupUpc()" [disabled]="isLoading" class="btn btn-primary"><i class="bi bi-search"></i></button>
+      </div>
+    </div>
+
+    <div class="input-section" *ngIf="inputMode === 'image'">
+      <label for="file-input" class="form-label d-block ms-2">Scan Barcode</label>
+      <div class="d-flex">
+        <input
+          id="file-input"
+          class="form-control"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          (change)="onFileSelected($event)"
+          [disabled]="isLoading"
+        >
+        <button
+          class="camera-button btn btn-primary"
+
+          (click)="openCamera()"
+          [disabled]="isLoading"
+        >
+          <i class="bi bi-camera"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5">
+    <div class="btn-group" role="group">
+      <button
+        type="button"
+        class="btn"
+        [class.btn-outline-primary]="inputMode !== 'image'"
+        [class.btn-primary]="inputMode === 'image'"
+        (click)="inputMode = 'image'"
+      >
+        <i class="bi bi-upc-scan"></i>
+      </button>
+      <button
+        type="button"
+        class="btn"
+        [class.btn-outline-primary.btn-check]="inputMode !== 'text'"
+        [class.btn-primary.btn-check]="inputMode === 'text'"
+        (click)="inputMode = 'text'"
+      >
+        <i class="bi bi-123"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <div class="status" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Processing...</p>
+  </div>
+
+  <div class="error" *ngIf="errorMessage">
+    <p>{{ errorMessage }}</p>
+  </div>
+</main>
+

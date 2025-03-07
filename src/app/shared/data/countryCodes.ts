@@ -1,6 +1,7 @@
 export const countryCodes:Record<string, string> = {
   "Canada": "CA",
   "United States": "US",
+  "en:us": "US",
   "Mexico": "MX",
   "Brazil": "BR",
   "United Kingdom": "GB",
