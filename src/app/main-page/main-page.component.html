@@ -1,4 +1,4 @@
-<main class="mt-5 d-flex flex-column w-75 h-100 m-auto align-items-center justify-content-center">
+<main class="mt-5 d-flex flex-column h-100 m-auto align-items-center justify-content-center">
   <div *ngIf="!isLoading" class="d-flex flex-column w-75 h-100 m-auto align-items-center justify-content-center">
   <form class="d-block" [formGroup]="scanForm">
     <div class="input-section" *ngIf="inputMode === 'text'">
@@ -21,11 +21,10 @@
       <label for="file-input" class="form-label d-block ms-2">Scan Barcode:</label>
       <div class="d-flex btn-group">
         <input
+          #cameraInput
           id="file-input"
           class="form-control"
           type="file"
-          accept="image/*"
-          capture="environment"
           (change)="onFileSelected($event)"
           [disabled]="isLoading"
         >

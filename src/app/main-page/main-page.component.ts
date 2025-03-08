@@ -2,7 +2,7 @@ import {Component, ElementRef, ViewChild} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {UpcService} from '../services/upc.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Jimp, JimpMime} from 'jimp';
+import {Jimp, JimpMime, ResizeStrategy} from 'jimp';
 import Quagga from '@ericblade/quagga2';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import { NgIf} from '@angular/common';
@@ -30,6 +30,7 @@ export class MainPageComponent {
   errorMessage = '';
   inputMode: 'text' | 'image' = 'image';
   scanResult: UpcItem | null = null;
+  @ViewChild('cameraInput') cameraInput!: ElementRef;
 
   constructor(private http: HttpClient, private upcService:UpcService, private Route: ActivatedRoute, private router: Router, private fb:FormBuilder) {
     this.scanForm = this.fb.group({
@@ -41,6 +42,20 @@ export class MainPageComponent {
     this.selectedFile = event.target.files[0];
     // need to also set it here
     this.isLoading = true;
+
+    if (!this.selectedFile) {
+      this.isLoading = false;
+      return;
+    }
+
+    // must be image
+    if (!this.selectedFile.type.match('image.*')) {
+      this.errorMessage = "Please select an image file (JPEG, PNG, etc.)";
+      event.target.value = '';
+      this.isLoading = false;
+      return;
+    }
+
     if (this.selectedFile) {
       this.processImage();
     }
@@ -59,14 +74,9 @@ export class MainPageComponent {
         'preProcessedImage.png',
         { type: 'image/png' }
       );
-      const imageUrl = URL.createObjectURL(preProcessedImageFile);
-
       try {
         const upcCode = await this.scanBarcode(preProcessedImageFile) ?? "";
 
-        // const imgElement = document.createElement('img');
-        // imgElement.src = imageUrl;
-        // document.body.appendChild(imgElement);
         const upcMatch = upcCode.match(/\d{12}/);
 
         if (upcMatch) {
@@ -125,32 +135,100 @@ export class MainPageComponent {
   }
 
   // need to preprocess for best results
-  async preProcessImage(file:File):Promise<Buffer> {
-    try {
-      // could do via canvas, but why?
-      const imageUrl = URL.createObjectURL(file);
-      const image = await Jimp.read(imageUrl);
-      image.greyscale();
-      image.contrast(0.75);
+  async preProcessImage(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-      // Binarize the image (convert to black and white)
-      image.threshold({ max: 128, autoGreyscale: false });
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
 
-      return await image.getBuffer(JimpMime.png);
+      img.onload = () => {
+        try {
+          // Resize to reasonable dimensions
+          const maxWidth = 1000;
+          const maxHeight = 1000;
+          let width = img.width;
+          let height = img.height;
 
-    } catch (e) {
-      console.error('Oopsie daisy while preprocessing!', e);
-      throw e;
-    }
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round(height * (maxWidth / width));
+              width = maxWidth;
+            } else {
+              width = Math.round(width * (maxHeight / height));
+              height = maxHeight;
+            }
+          }
 
-  }
+          // Set canvas dimensions
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw the image on canvas
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Get image data to manipulate pixels
+          const imageData = ctx.getImageData(0, 0, width, height);
+          const data = imageData.data;
+
+          // Convert to grayscale
+          for (let i = 0; i < data.length; i += 4) {
+            const gray = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
+            data[i] = data[i + 1] = data[i + 2] = gray;
+          }
+
+          // Increase contrast
+          const factor = 1.5; // contrast factor
+          for (let i = 0; i < data.length; i += 4) {
+            const value = data[i];
+            data[i] = data[i + 1] = data[i + 2] =
+              Math.min(255, Math.max(0, factor * (value - 128) + 128));
+          }
+
+          // Apply threshold (binarize the image)
+          const threshold = 128;
+          for (let i = 0; i < data.length; i += 4) {
+            const value = data[i] > threshold ? 255 : 0;
+            data[i] = data[i + 1] = data[i + 2] = value;
+          }
+
+          // Put the modified data back on the canvas
+          ctx.putImageData(imageData, 0, 0);
+
+          // Convert canvas to blob
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to convert canvas to blob'));
+            }
+
+            // Clean up to free memory
+            URL.revokeObjectURL(img.src);
+          }, 'image/png');
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = (error) => {
+        reject(error);
+      };
+
+      img.src = URL.createObjectURL(file);
+    })};
 
   scanBarcode(imageFile: File): Promise<string | null> {
     return new Promise((resolve, reject) => {
+      const imageUrl = URL.createObjectURL(imageFile);
       Quagga.decodeSingle(
         {
-          src: URL.createObjectURL(imageFile),
-          numOfWorkers: 0,
+          src: imageUrl,
+          numOfWorkers: Math.min(navigator.hardwareConcurrency || 4, 2) ,
           inputStream: {
             size: 800,
           },
@@ -163,6 +241,7 @@ export class MainPageComponent {
           },
         },
         (result) => {
+          URL.revokeObjectURL(imageUrl);
           if (result?.codeResult?.code) {
             resolve(result.codeResult.code);
           } else {
@@ -174,7 +253,7 @@ export class MainPageComponent {
   }
 
   openCamera() {
-    document.getElementById('file-input')!.click()
+    this.cameraInput.nativeElement.click();
   }
 
   protected readonly alert = alert;

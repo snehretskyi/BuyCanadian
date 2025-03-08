@@ -37,3 +37,88 @@
 section h2 {
   border-bottom: 0.2rem solid var(--bs-primary);
 }
+
+/* Add these CSS styles to your component's stylesheet */
+.input-section {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.input-section .form-control {
+  font-size: 1.2rem;
+  padding: 0.75rem;
+  height: auto;
+}
+
+.input-section .btn {
+  font-size: 1.2rem;
+  padding: 0.75rem 1.5rem;
+}
+
+/* Specifically for the file input */
+#file-input {
+  min-height: 60px;
+  width: 100%;
+}
+
+/* For the UPC input */
+#upc-input {
+  min-height: 60px;
+  width: 100%;
+}
+
+/* Make the button group stretch properly */
+.btn-group {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  main {
+    width: 100vw;
+    padding: 1rem;
+  }
+  .input-section .form-control,
+  .input-section .btn {
+    font-size: 1.4rem;
+    padding: 1rem;
+  }
+
+  #file-input,
+  #upc-input {
+    min-height: 70px;
+  }
+}
+
+/* Add these CSS styles for the mode selection buttons */
+.btn-group .btn {
+  font-size: 1.2rem;
+  padding: 0.75rem 1.5rem;
+}
+
+/* Make the icons inside buttons larger */
+.btn-group .btn i {
+  font-size: 1.4rem;
+}
+
+/* Add more padding around the button group */
+.my-5 .btn-group {
+  margin: 1.5rem 0;
+}
+
+/* Make the buttons larger on all devices */
+.my-5 .btn-group .btn {
+  min-width: 70px;
+  min-height: 60px;
+}
+
+/* Responsive adjustments for larger screens */
+@media (min-width: 768px) {
+  .my-5 .btn-group .btn {
+    min-width: 100px;
+    min-height: 70px;
+  }
+
+  .btn-group .btn i {
+    font-size: 1.8rem;
+  }
+}

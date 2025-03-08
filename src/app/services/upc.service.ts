@@ -21,7 +21,11 @@ export class UpcService {
         }
 
         const product = response.product;
-        let countryString = product?.manufacturing_places.split(',') || product?.countries_hierarchy || product?.countries.split(',') || 'Unknown';
+        let countryString = product?.manufacturing_places || product?.countries_hierarchy || product?.countries || 'Unknown';
+
+        if (countryString instanceof String && countryString != "Unknown") {
+          countryString = countryString.split(',');
+        }
         let countriesArray: string[] = [];
 
         // Handle multiple countries and different formats
