@@ -2,7 +2,6 @@ import {Component, ElementRef, ViewChild} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {UpcService} from '../services/upc.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Jimp, JimpMime, ResizeStrategy} from 'jimp';
 import Quagga from '@ericblade/quagga2';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import { NgIf} from '@angular/common';
@@ -67,35 +66,19 @@ export class MainPageComponent {
     this.errorMessage = '';
     this.scanResult = null;
 
-    try {
-      const preprocessedImage = await this.preProcessImage(this.selectedFile);
-      const preProcessedImageFile = new File(
-        [preprocessedImage],
-        'preProcessedImage.png',
-        { type: 'image/png' }
-      );
-      try {
-        const upcCode = await this.scanBarcode(preProcessedImageFile) ?? "";
-
-        const upcMatch = upcCode.match(/\d{12}/);
-
-        if (upcMatch) {
-          this.upcInput = upcMatch[0];
+    const upc = this.upcService.uploadAndScanImage(this.selectedFile).subscribe(
+      {
+        next: result => {
+          this.upcInput = result;
           this.lookupUpc();
-        } else {
-          this.errorMessage = 'No UPC code detected in image';
+        },
+        error: e => {
+          this.errorMessage = 'No UPC code detected in image!';
+          this.isLoading = false;
+          console.error(e);
         }
-      } catch (e) {
-        this.errorMessage = "No UPC found!";
-        this.isLoading = false;
       }
-
-
-
-    } catch (error) {
-      this.errorMessage = 'Error processing image';
-      console.error(error);
-    }
+    )
   }
 
   lookupUpc(): void {

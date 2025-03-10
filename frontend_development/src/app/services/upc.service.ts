@@ -10,6 +10,7 @@ import {UpcNotFoundError} from '../models/errors/UpcNotFoundError';
 })
 export class UpcService {
   private apiUrl = "https://world.openfoodfacts.org/api/v0/product";
+  private serverApiUrl = "http://localhost:3000/api/scan-barcode";
 
   constructor(private http: HttpClient) { }
 
@@ -28,6 +29,7 @@ export class UpcService {
         }
         let countriesArray: string[] = [];
 
+
         // Handle multiple countries and different formats
         if (countryString !== 'Unknown') {
           countriesArray = countryString.map((country: string) => {
@@ -41,7 +43,7 @@ export class UpcService {
         }
 
         // Find first country with a valid code
-        let primaryCountry = 'Unknown';
+        let primaryCountry = countryString;
         let primaryCountryCode = '';
 
         // Check if Canada or USA exist in the countries list
@@ -75,5 +77,13 @@ export class UpcService {
         } as UpcItem;
       })
     );
+  }
+
+  uploadAndScanImage(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    return this.http.post<{upc: string}>(this.serverApiUrl, formData)
+      .pipe(map(response => response.upc));
   }
 }
